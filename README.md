@@ -1,4 +1,4 @@
-# vue-cli
+# GitHub Finder
 
 ## Project setup
 ```
