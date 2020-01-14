@@ -38,9 +38,9 @@ export default {
     }
   },
   computed: {
-      pages(){
-          return [...Array(Math.ceil(this.total/this.itemPerPage)).keys()]
-      }
+    pages(){
+        return [...Array(Math.ceil(this.total/this.itemPerPage)).keys()]
+    }
   } 
 }
 </script>

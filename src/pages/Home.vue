@@ -32,9 +32,9 @@
 
             <!-- sort bar -->
             <div class="repos-info repos-info__header">
-              <sortBy text="Name" field="name" :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
+              <sortBy text="Name" field="name" :currentSort="currentSort.field" :currentSortDir="currentSort.dir" @sort="sort" />
 
-              <sortBy text="Stars" field="stargazers_count" :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
+              <sortBy text="Stars" field="stargazers_count" :currentSort="currentSort.field" :currentSortDir="currentSort.dir" @sort="sort" />
             </div>
 
             <!-- item  -->
@@ -49,7 +49,7 @@
           </div>
 
           <!-- pagination  --> 
-          <pagination :current="page.current" :total="repos.length" :itemPerPage="page.length" @setPage="setPage" />
+          <pagination :current="pageCurrent" :total="repos.length" :itemPerPage="itemPerPage" @setPage="setPage" />
 
         </div>
 
@@ -66,85 +66,63 @@ import user from '@/components/User.vue'
 import sortBy from '@/components/UI/SortBy.vue'
 import pagination from '@/components/UI/Pagination.vue'
 import search from '@/components/Search.vue'
-import axios from 'axios'
 
 export default {
   components: {user, sortBy, pagination, search},
   data () {
     return {
-      search:'',
-      error: null,
-      repos: null,
-      userInfo: null,
-      currentSort: 'name',
-      currentSortDir: 'asc',
-      page: {
-        current: 1,
-        length: 3
-      }
-
+      search:''
     }
   },
   methods: {
+
     getRepos (){
-      this.page.current=1;
-      this.currentSortDir = 'asc';
-      this.currentSort = 'name';
-
-      const getUser = axios.get(`https://api.github.com/users/${this.search}`);
-      const getRepos = axios.get(`https://api.github.com/users/${this.search}/repos`);
-
-      Promise.all([getUser, getRepos])
-        .then(res => {
-
-          this.userInfo = res[0].data;
-          this.repos = res[1].data;
-          this.error = null
-        })
-        .catch(err => {
-          console.log(err);
-          this.userInfo = null;
-          this.repos = null;
-          this.error='Cant`t find this user'
-        })
-
+      if (this.search) {
+        this.$store.dispatch('getRepos', this.search);
+      } else {
+        this.$store.commit('setError', 'Cant`t empty  user');
+      }
     },
 
     sort (e) {
-      if (e===this.currentSort){
-        this.currentSortDir = this.currentSortDir === 'asc' ? 'desc': 'asc'
-      } else {
-        this.currentSortDir = 'asc'
-      }
-      this.currentSort = e
+      this.$store.commit('sortRepos', e);
     },
 
     setPage(page) {
-      this.page.current=page
+      this.$store.commit('setPage', page);
     }
 
 
   }, 
 
   computed: {
+    error(){
+      return this.$store.getters.getError;
+    },    
+
+    repos(){
+      return this.$store.getters.getRepos;
+    },
+
+    userInfo(){
+      return this.$store.getters.getUser;
+    },
+
     reposSort(){
-      return this.repos.sort((a,b)=>{
-        let mod = 1
-        if (this.currentSortDir === 'desc'){
-          mod = -1
-        }
-        if (a[this.currentSort] < b[this.currentSort]){
-          return -1*mod
-        }
-        if (a[this.currentSort] > b[this.currentSort]){
-          return 1*mod
-        }
-        return 0
-      }).filter((row, index)=>{
-        let start = (this.page.current-1)*this.page.length;
-        let end = this.page.current * this.page.length
-        if (index >= start && index <end) return true
-      })
+      return this.$store.getters.getReposSorted;
+    },
+
+    pageCurrent(){
+      return this.$store.getters.getPage;
+    },
+    pageCurrent(){
+      return this.$store.getters.getPage;
+    },
+    itemPerPage(){
+      return this.$store.getters.getItemPerPage;
+    },
+    currentSort(){
+      return this.$store.getters.getSort;
     }
   }
 
